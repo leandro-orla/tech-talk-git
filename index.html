@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo List</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-slate-900 text-slate-100 flex items-center justify-center p-4">
+  <main class="w-full max-w-md">
+    <!-- Logo -->
+    <div class="flex justify-center mb-8">
+      <img src="logo.svg" alt="Logo" class="h-12 w-auto" />
+    </div>
+
+    <h1 class="text-2xl font-semibold text-center mb-6">Minha Lista de Tarefas</h1>
+
+    <!-- Formulário: input + botão adicionar -->
+    <form id="todo-form" class="flex gap-2 mb-6">
+      <input
+        id="todo-input"
+        type="text"
+        placeholder="Digite uma tarefa..."
+        class="flex-1 rounded-lg bg-slate-800 border border-slate-700 px-4 py-2 outline-none focus:border-indigo-500 placeholder-slate-500"
+      />
+      <button
+        type="submit"
+        class="rounded-lg bg-indigo-600 hover:bg-indigo-500 px-5 py-2 font-medium transition-colors"
+      >
+        Adicionar
+      </button>
+    </form>
+
+    <!-- Lista de tarefas -->
+    <ul id="todo-list" class="space-y-2"></ul>
+
+    <p id="empty-state" class="text-center text-slate-500 text-sm mt-4">
+      Nenhuma tarefa ainda.
+    </p>
+  </main>
+
+  <script>
+    const form = document.getElementById("todo-form");
+    const input = document.getElementById("todo-input");
+    const list = document.getElementById("todo-list");
+    const emptyState = document.getElementById("empty-state");
+
+    function updateEmptyState() {
+      emptyState.style.display = list.children.length ? "none" : "block";
+    }
+
+    function addTodo(text) {
+      const li = document.createElement("li");
+      li.className =
+        "flex items-center justify-between gap-2 rounded-lg bg-slate-800 border border-slate-700 px-4 py-2";
+
+      const span = document.createElement("span");
+      span.textContent = text;
+      span.className = "flex-1";
+
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "Remover";
+      removeBtn.className = "text-sm text-red-400 hover:text-red-300";
+      removeBtn.addEventListener("click", () => {
+        li.remove();
+        updateEmptyState();
+      });
+
+      li.append(span, removeBtn);
+      list.appendChild(li);
+      updateEmptyState();
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      addTodo(text);
+      input.value = "";
+      input.focus();
+    });
+
+    updateEmptyState();
+  </script>
+</body>
+</html>

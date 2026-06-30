@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Git para iniciantes: versionamento sem medo para quem cria com IA</title>
+  <style>
+    :root {
+      --bg: #000;
+      --fg: #fff;
+      --muted: #9a9a9a;
+      --dim: #6e6e6e;
+      --accent: #7c7cff;
+      --line: #2a2a2a;
+      --card: #121212;
+      --card2: #181818;
+      --green: #3ecf8e;
+      --amber: #ffb454;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    html,
+    body {
+      height: 100%;
+      background: #000;
+      color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      overflow: hidden
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000
+    }
+
+    .deck {
+      position: relative;
+      width: 100vw;
+      /* height: 56.25vw; */
+      height: 100vh;
+      max-height: 100vh;
+      max-width: 177.78vh;
+      background: #000;
+      overflow: hidden
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      padding: 5.5% 7%;
+      opacity: 0;
+      transition: opacity .35s ease
+    }
+
+    .slide.active {
+      display: flex;
+      opacity: 1
+    }
+
+    /* scale text relative to deck width using cqw */
+    .deck {
+      container-type: inline-size
+    }
+
+    .eyebrow {
+      font-size: 2.4cqw;
+      letter-spacing: .35em;
+      color: var(--dim);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 1.2cqw
+    }
+
+    h1 {
+      font-size: 7cqw;
+      font-weight: 800;
+      line-height: 1.04;
+      letter-spacing: -.02em
+    }
+
+    h2 {
+      font-size: 4.8cqw;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -.015em
+    }
+
+    h3 {
+      font-size: 3.6cqw;
+      font-weight: 700;
+      line-height: 1.1
+    }
+
+    p,
+    li {
+      font-size: 2.5cqw;
+      line-height: 1.45;
+      color: #e3e3e3;
+      font-weight: 400
+    }
+
+    .sub {
+      color: var(--muted)
+    }
+
+    .center {
+      align-items: center;
+      justify-content: center;
+      text-align: center
+    }
+
+    .grow {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center
+    }
+
+    .accent {
+      color: var(--accent)
+    }
+
+    .green {
+      color: var(--green)
+    }
+
+    .amber {
+      color: var(--amber)
+    }
+
+    .pergunta {
+      margin-top: auto;
+      padding-top: 2.5cqw;
+      border-top: 1px solid var(--line);
+      font-size: 2.2cqw;
+      color: var(--muted)
+    }
+
+    .pergunta b {
+      color: var(--fg);
+      letter-spacing: .06em;
+      margin-right: .6em;
+      font-size: 1.7cqw;
+      text-transform: uppercase
+    }
+
+    .grid {
+      display: grid;
+      gap: 2cqw
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 1.4cqw;
+      padding: 2.6cqw
+    }
+
+    .card h3 {
+      font-size: 3cqw;
+      margin-bottom: .7cqw
+    }
+
+    .card p {
+      font-size: 2cqw;
+      color: var(--muted)
+    }
+
+    .logo {
+      width: 14cqw;
+      margin-bottom: 6cqw
+    }
+
+    .footer-name {
+      font-size: 2cqw;
+      font-weight: 700
+    }
+
+    .footer-role {
+      font-size: 1.7cqw;
+      color: var(--dim)
+    }
+
+    ul {
+      list-style: none
+    }
+
+    .chk li {
+      position: relative;
+      padding-left: 2.6cqw;
+      margin: 1.4cqw 0;
+      font-size: 2.5cqw
+    }
+
+    .chk li::before {
+      content: "✕";
+      position: absolute;
+      left: 0;
+      color: #ff5d5d;
+      font-weight: 700
+    }
+
+    .ok li {
+      position: relative;
+      padding-left: 2.6cqw;
+      margin: 1.4cqw 0;
+      font-size: 2.5cqw
+    }
+
+    .ok li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700
+    }
+
+    .pill {
+      display: inline-block;
+      background: var(--card2);
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      padding: .8cqw 2cqw;
+      font-size: 2cqw;
+      margin: .5cqw
+    }
+
+    .twocol {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3cqw
+    }
+
+    .ba {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 1.4cqw;
+      padding: 2.6cqw
+    }
+
+    .ba .lbl {
+      font-size: 1.8cqw;
+      letter-spacing: .2em;
+      color: var(--dim);
+      font-weight: 700;
+      margin-bottom: 1.2cqw
+    }
+
+    .ba.now {
+      border-color: #34406b;
+      background: #10131f
+    }
+
+    .ba.bad {
+      border-color: #5a2a2a;
+      background: #1a1010
+    }
+
+    .ba.good {
+      border-color: #235a3a;
+      background: #0f1a14
+    }
+
+    .ba p {
+      font-size: 2.2cqw;
+      color: #dcdcdc;
+      white-space: pre-line;
+      line-height: 1.5
+    }
+
+    .domains {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.4cqw;
+      margin-top: 2cqw
+    }
+
+    .domains .pill {
+      font-size: 2.4cqw;
+      padding: 1cqw 2.4cqw;
+      background: #10131f;
+      border-color: #34406b
+    }
+
+    .layers {
+      display: flex;
+      flex-direction: column;
+      gap: 1cqw;
+      margin-top: 2cqw
+    }
+
+    .layer {
+      display: flex;
+      align-items: center;
+      gap: 2cqw;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 1cqw;
+      padding: 1.6cqw 2.4cqw
+    }
+
+    .layer .t {
+      font-size: 2.8cqw;
+      font-weight: 700;
+      min-width: 34%
+    }
+
+    .layer .d {
+      font-size: 2cqw;
+      color: var(--muted)
+    }
+
+    .layer.top {
+      border-color: #34406b;
+      background: #10131f
+    }
+
+    .media {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2cqw;
+      min-height: 0
+    }
+
+    .media img,
+    .media video {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 1cqw;
+      border: 1px solid var(--line)
+    }
+
+    .codeblock {
+      background: #0d0d0d;
+      border: 1px solid var(--line);
+      border-radius: 1cqw;
+      padding: 2cqw;
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      font-size: 1.7cqw;
+      line-height: 1.6;
+      color: #cfcfcf;
+      white-space: pre-wrap;
+      overflow: hidden
+    }
+
+    .codeblock .c {
+      color: var(--dim)
+    }
+
+    .codeblock .k {
+      color: var(--accent)
+    }
+
+    .split2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.4cqw;
+      flex: 1;
+      min-height: 0
+    }
+
+    .split2 .col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0
+    }
+
+    .split2 .col h3 {
+      font-size: 2.4cqw;
+      margin-bottom: 1cqw;
+      color: var(--muted)
+    }
+
+    .note {
+      font-size: 1.9cqw;
+      color: var(--dim);
+      margin-top: 1.6cqw;
+      border-top: 1px solid var(--line);
+      padding-top: 1.4cqw
+    }
+
+    .note b {
+      color: var(--green)
+    }
+
+    /* progress + controls */
+    #bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      z-index: 50;
+      transition: width .3s
+    }
+
+    #ctr {
+      position: fixed;
+      bottom: 14px;
+      right: 18px;
+      z-index: 50;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--dim);
+      font-family: inherit
+    }
+
+    #ctr button {
+      background: #161616;
+      color: #ddd;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      font-size: 16px;
+      cursor: pointer
+    }
+
+    #ctr button:hover {
+      background: #222
+    }
+
+    .hint {
+      position: fixed;
+      bottom: 16px;
+      left: 18px;
+      z-index: 50;
+      font-size: 12px;
+      color: #444
+    }
+  </style>
+</head>
+
+<body>
+  <div id="bar"></div>
+  <div id="stage">
+    <div class="deck" id="deck">
+
+      <!-- 0 CAPA -->
+      <section class="slide center">
+        <!-- <svg class="logo" viewBox="0 0 120 40" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M6 30 C6 18 12 12 18 12 C24 12 26 20 30 20 C34 20 34 10 40 10 L40 30 C34 30 32 22 30 22 C26 22 24 30 18 30 C12 30 10 24 8 24 L8 30 Z" />
+          <text x="48" y="29" font-family="-apple-system,Helvetica,Arial" font-size="22" font-weight="500" fill="#fff"
+            letter-spacing="1">orla</text>
+        </svg> -->
+
+        <svg class="logo" width="796" height="210" viewBox="0 0 796 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g clip-path="url(#clip0_303_474)">
+            <path
+              d="M266.45 103.06V156.25C266.45 165.94 263.86 175.03 259.33 182.85C250.14 198.75 232.95 209.45 213.26 209.45C193.57 209.45 176.38 198.75 167.19 182.85C162.66 175.03 160.07 165.94 160.07 156.25V129.65C160.07 119.96 157.48 110.88 152.95 103.05C143.76 87.15 126.57 76.45 106.88 76.45C87.19 76.45 70 87.15 60.81 103.05C56.28 110.88 53.69 119.96 53.69 129.65V156.25C53.69 165.94 51.1 175.03 46.57 182.85C37.38 198.75 20.19 209.45 0.5 209.45V156.26C20.19 156.26 37.38 145.56 46.57 129.66C51.1 121.84 53.69 112.75 53.69 103.06V76.46C53.69 66.77 56.28 57.69 60.81 49.87C70 33.97 87.19 23.27 106.88 23.27C126.57 23.27 143.76 33.97 152.95 49.87C157.48 57.7 160.07 66.78 160.07 76.46V103.06C160.07 112.75 162.66 121.84 167.19 129.66C176.38 145.56 193.57 156.26 213.26 156.26C232.95 156.26 250.14 145.56 259.33 129.66C263.86 121.84 266.45 112.75 266.45 103.06Z"
+              fill="white" stroke="white" stroke-miterlimit="10" />
+            <path
+              d="M337.379 116.23C337.379 75.91 366.999 46.79 408.059 46.79C449.119 46.79 479.239 75.91 479.239 115.98C479.239 156.05 449.369 186.17 408.059 186.17C366.749 186.17 337.379 156.8 337.379 116.23ZM460.329 116.23C460.329 85.12 438.429 63.72 408.059 63.72C377.689 63.72 356.039 85.12 356.039 116.23C356.039 147.34 377.939 168.99 408.309 168.99C438.679 168.99 460.329 147.34 460.329 116.23Z"
+              fill="white" />
+            <path
+              d="M502.141 183.68V105.78C502.141 69.44 524.291 46.79 554.901 46.79C574.811 46.79 589.251 55 597.211 62.72L586.761 75.91C582.281 71.43 570.831 63.71 555.901 63.71C533.751 63.71 520.811 77.9 520.811 106.52V183.67H502.141V183.68Z"
+              fill="white" />
+            <path d="M609.41 183.68V0H628.08V183.68H609.41Z" fill="white" />
+            <path
+              d="M795.069 117.97V183.68H776.149V159.79C763.949 177.21 743.789 186.17 722.889 186.17C683.069 186.17 653.199 156.8 653.199 116.73C653.199 76.66 682.819 46.79 724.129 46.79C765.439 46.79 795.059 76.16 795.059 117.97H795.069ZM776.149 116.73C776.149 85.37 754.249 63.72 723.879 63.72C693.509 63.72 672.109 85.37 672.109 116.48C672.109 147.59 693.759 168.99 724.129 168.99C754.499 168.99 776.149 147.83 776.149 116.72V116.73Z"
+              fill="white" />
+          </g>
+          <defs>
+            <clipPath id="clip0_303_474">
+              <rect width="795.07" height="209.94" fill="white" />
+            </clipPath>
+          </defs>
+        </svg>
+
+
+        <h1>Git para iniciantes</h1>
+        <p class="sub" style="font-size:3.2cqw;margin-top:2cqw">Versionamento de código sem medo, para quem cria com IA
+        </p>
+        <!-- troque pelo nome de quem apresenta -->
+        <div style="margin-top:10cqw">
+          <div class="footer-name">Leandro Silva</div>
+          <div class="footer-role">Tech Talk · Orla</div>
+        </div>
+      </section>
+
+      <!-- 1 O QUE É GIT (visão rápida) -->
+      <section class="slide center">
+        <div class="eyebrow">Antes de tudo</div>
+        <h2 style="margin-bottom:2.5cqw;max-width:90%">O que é Git?</h2>
+        <p style="font-size:3.2cqw;max-width:86%;line-height:1.4">Um programa que guarda <span class="accent">todas as versões</span> do seu projeto e deixa você <span class="accent">voltar no tempo</span> quando quiser.</p>
+        <p class="sub" style="font-size:2.4cqw;margin-top:2.5cqw">Controle de versão, em uma frase.</p>
+      </section>
+
+      <!-- 2 POR QUE IMPORTA -->
+      <section class="slide">
+        <div class="eyebrow">Por que isso importa</div>
+        <h2 style="margin-bottom:3cqw">Você já cria software. Falta a rede de segurança.</h2>
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="card">
+            <h3>Você usa IA</h3>
+            <p>Cursor, Claude, Lovable, v0… o código nasce rápido.</p>
+          </div>
+          <div class="card">
+            <h3>Muda o tempo todo</h3>
+            <p>Cada ideia nova mexe em vários arquivos de uma vez.</p>
+          </div>
+          <div class="card">
+            <h3>Quebra fácil</h3>
+            <p>Uma alteração errada e o que funcionava some.</p>
+          </div>
+          <div class="card">
+            <h3>Vai pro ar</h3>
+            <p>Vercel, Netlify e afins publicam direto do seu repositório.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2 O PROBLEMA -->
+      <section class="slide">
+        <div class="eyebrow">O problema</div>
+        <h2 style="margin-bottom:1.5cqw">Sem versionamento, você vira refém do <span
+            class="amber">"final_v2_FINAL"</span>.</h2>
+        <p class="sub" style="margin-bottom:1.5cqw">A vida sem Git, na prática:</p>
+        <ul class="chk">
+          <li>projeto-final.zip, projeto-final-2.zip, projeto-final-AGORA.zip</li>
+          <li>"funcionava ontem" e ninguém sabe o que mudou</li>
+          <li>apagou algo sem querer e não tem como voltar</li>
+          <li>dois computadores, duas versões diferentes</li>
+          <li>colaborar virou trocar arquivo no WhatsApp</li>
+        </ul>
+      </section>
+
+      <!-- 3 O QUE É GIT -->
+      <section class="slide">
+        <div class="eyebrow">Conceito</div>
+        <h2>Git é uma máquina do tempo para o seu projeto.</h2>
+        <h3 class="sub" style="margin:.8cqw 0 2.4cqw">Controle de versão</h3>
+        <p>Cada vez que você salva um marco, o Git guarda uma foto completa do projeto. Dá pra voltar a qualquer ponto,
+          comparar versões e nunca mais perder trabalho. Tudo isso no seu computador, de graça e funcionando offline.
+        </p>
+        <div class="pergunta"><b>Pergunta-guia</b>O que mudou, quando, e como volto se der errado?</div>
+      </section>
+
+      <!-- 4 GIT vs GITHUB -->
+      <section class="slide">
+        <div class="eyebrow">A diferença que confunde todo mundo</div>
+        <h2 style="margin-bottom:3cqw">Git <span class="sub">≠</span> GitHub</h2>
+        <div class="twocol">
+          <div class="ba">
+            <div class="lbl">Git · a ferramenta</div>
+            <p>Roda no seu computador.
+              Guarda o histórico do projeto.
+              Funciona offline.
+              Grátis e de código aberto.</p>
+          </div>
+          <div class="ba now">
+            <div class="lbl">GitHub · o lugar na nuvem</div>
+            <p>Guarda seu repositório online.
+              Faz backup automático.
+              Deixa várias pessoas (e IAs) colaborarem no mesmo código.</p>
+          </div>
+        </div>
+        <div class="note"><b>Existem outras opções:</b> GitHub é só um dos lugares. Também há GitLab e Bitbucket. E o
+          Git nem é a única ferramenta de versão (existem Mercurial, SVN). Mas <b>Git + GitHub</b> é o padrão do mercado
+          hoje.</div>
+      </section>
+
+      <!-- 5 VOCABULÁRIO -->
+      <section class="slide">
+        <div class="eyebrow">Vocabulário</div>
+        <h2 style="margin-bottom:3cqw">Quatro palavras e você já se vira.</h2>
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="card">
+            <h3>Repositório <span class="sub" style="font-size:.6em">(repo)</span></h3>
+            <p>A pasta do projeto + todo o histórico de mudanças.</p>
+          </div>
+          <div class="card">
+            <h3>Commit</h3>
+            <p>Um "save" com etiqueta dizendo o que mudou.</p>
+          </div>
+          <div class="card">
+            <h3>Branch</h3>
+            <p>Uma linha do tempo paralela pra testar sem medo.</p>
+          </div>
+          <div class="card">
+            <h3>Remote</h3>
+            <p>A cópia que vive na nuvem (no GitHub).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6 O FLUXO BÁSICO -->
+      <section class="slide">
+        <div class="eyebrow">O fluxo do dia a dia</div>
+        <h2 style="margin-bottom:1cqw">Quase tudo é este ciclo.</h2>
+        <p class="sub">Repete o tempo todo, sem mistério.</p>
+        <div class="layers">
+          <div class="layer"><span class="t">1 · Mudar</span><span class="d">você (ou a IA) edita os arquivos</span>
+          </div>
+          <div class="layer"><span class="t">2 · Add</span><span class="d">escolhe o que entra no próximo save</span>
+          </div>
+          <div class="layer"><span class="t">3 · Commit</span><span class="d">salva com uma mensagem do que mudou</span>
+          </div>
+          <div class="layer top"><span class="t accent">4 · Push</span><span class="d">envia tudo para o GitHub</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7 COMMIT -->
+      <section class="slide">
+        <div class="eyebrow">Conceito · Commit</div>
+        <h2>Commit é um ponto de salvamento.</h2>
+        <h3 class="sub" style="margin:.8cqw 0 2cqw">Como o save de um videogame</h3>
+        <p style="margin-bottom:2cqw">Cada commit guarda uma foto do projeto e uma mensagem curta. É a sua trilha de
+          migalhas: quando algo quebra, você volta pro último commit que funcionava.</p>
+        <div class="codeblock"><span class="k">git add</span> . <span class="c"># marca o que vai no save</span>
+          <span class="k">git commit</span> -m <span class="green">"adiciona tela de login"</span> <span class="c">#
+            salva com mensagem</span>
+        </div>
+        <div class="pergunta"><b>Dica</b>Mensagem boa = você do futuro agradece.</div>
+      </section>
+
+      <!-- 8 BRANCH -->
+      <section class="slide">
+        <div class="eyebrow">Conceito · Branch</div>
+        <h2>Branch é um universo paralelo.</h2>
+        <h3 class="sub" style="margin:.8cqw 0 2cqw">Testar sem arriscar o que já funciona</h3>
+        <p style="margin-bottom:2cqw">Quer experimentar uma ideia maluca? Cria uma branch e mexe à vontade. Deu certo,
+          você junta (merge) no principal. Deu errado, joga fora. O original continua intacto.</p>
+        <div class="codeblock"><span class="k">git checkout</span> -b nova-ideia <span class="c"># cria e entra na
+            branch</span>
+          <span class="c"># ... testa à vontade ...</span>
+          <span class="k">git merge</span> nova-ideia <span class="c"># junta se gostou</span>
+        </div>
+      </section>
+
+      <!-- 9 PUSH / PULL -->
+      <section class="slide">
+        <div class="eyebrow">Conceito · Nuvem</div>
+        <h2 style="margin-bottom:3cqw">Push manda, Pull traz.</h2>
+        <div class="twocol">
+          <div class="ba now">
+            <div class="lbl">Push ↑</div>
+            <p>Envia seus commits do computador para o GitHub.</p>
+          </div>
+          <div class="ba now">
+            <div class="lbl">Pull ↓</div>
+            <p>Traz para o seu computador o que mudou no GitHub.</p>
+          </div>
+        </div>
+        <div class="note"><b>É assim que tudo se conecta:</b> trocar de máquina, fazer backup e colaborar. Todo mundo
+          sincroniza pelo mesmo repositório.</div>
+      </section>
+
+      <!-- 10 COMANDOS ESSENCIAIS -->
+      <section class="slide">
+        <div class="eyebrow">Cola</div>
+        <h2 style="margin-bottom:2cqw">Os comandos que resolvem 90% dos dias.</h2>
+        <div class="codeblock"><span class="k">git init</span> <span class="c"># começa a versionar uma pasta</span>
+          <span class="k">git status</span> <span class="c"># o que mudou?</span>
+          <span class="k">git add</span> . <span class="c"># marca tudo pro próximo commit</span>
+          <span class="k">git commit</span> -m <span class="green">"..."</span> <span class="c"># salva com
+            mensagem</span>
+          <span class="k">git push</span> <span class="c"># envia pro GitHub</span>
+          <span class="k">git pull</span> <span class="c"># traz do GitHub</span>
+          <span class="k">git log</span> <span class="c"># vê o histórico</span>
+        </div>
+        <div class="note"><b>Sem terminal também vale:</b> muita gente faz tudo isso por botões (VS Code, GitHub
+          Desktop), sem digitar nada.</div>
+      </section>
+
+      <!-- 11 O QUE O GITHUB ADICIONA -->
+      <section class="slide">
+        <div class="eyebrow">GitHub</div>
+        <h2 style="margin-bottom:3cqw">O que o GitHub adiciona por cima do Git.</h2>
+        <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="card">
+            <h3>Backup na nuvem</h3>
+            <p>seu projeto nunca se perde.</p>
+          </div>
+          <div class="card">
+            <h3>Colaboração</h3>
+            <p>várias pessoas no mesmo código.</p>
+          </div>
+          <div class="card">
+            <h3>Pull Requests</h3>
+            <p>propor e revisar mudanças.</p>
+          </div>
+          <div class="card">
+            <h3>Issues</h3>
+            <p>lista de tarefas e bugs.</p>
+          </div>
+          <div class="card">
+            <h3>Deploy</h3>
+            <p>Vercel / Netlify publicam direto dele.</p>
+          </div>
+          <div class="card">
+            <h3>Histórico visual</h3>
+            <p>vê tudo pelo navegador.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 12 PULL REQUEST -->
+      <section class="slide">
+        <div class="eyebrow">GitHub · Colaboração</div>
+        <h2 style="margin-bottom:2cqw">Pull Request: <span class="accent">"olha o que mudei, pode entrar?"</span></h2>
+        <p style="margin-bottom:2cqw">Você faz suas mudanças numa branch e abre um Pull Request (PR). Os outros veem
+          exatamente o que mudou linha a linha, comentam, e só então junta no projeto principal.</p>
+        <div class="note"><b>É a porta de revisão</b>, e também onde os agentes de IA de code-review entram pra te
+          ajudar a achar problemas antes de subir.</div>
+      </section>
+
+      <!-- 13 PARA VIBE-CODERS -->
+      <section class="slide">
+        <div class="eyebrow">Para quem cria com IA</div>
+        <h2 style="margin-bottom:3cqw">Git é a sua <span class="accent">rede de segurança</span> com a IA.</h2>
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="card">
+            <h3>Commit antes do pedido grande</h3>
+            <p>se a IA bagunçar, o Git volta tudo num clique.</p>
+          </div>
+          <div class="card">
+            <h3>A IA deixa de assustar</h3>
+            <p>você sempre tem o "estado que funcionava" salvo.</p>
+          </div>
+          <div class="card">
+            <h3>As ferramentas já falam Git</h3>
+            <p>Cursor, Claude Code e Copilot commitam e criam branches pra você.</p>
+          </div>
+          <div class="card">
+            <h3>Deploy automático</h3>
+            <p>fez push, o site se atualiza sozinho.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 14 MEDOS x REALIDADE -->
+      <section class="slide">
+        <div class="eyebrow">Sem medo</div>
+        <h2 style="margin-bottom:3cqw">Os perrengues parecem piores do que são.</h2>
+        <div class="twocol">
+          <div class="ba bad">
+            <div class="lbl">O medo</div>
+            <p>"Vou quebrar tudo"
+              "Conflito de merge dá pânico"
+              "São comandos demais"
+              "Isso é só pra dev raiz"</p>
+          </div>
+          <div class="ba good">
+            <div class="lbl">A realidade</div>
+            <p>O Git guarda tudo: sempre dá pra voltar
+              Conflito = vocês mexeram na mesma linha; você decide qual fica
+              6 comandos (ou só botões) resolvem o dia
+              Hoje é pra qualquer um que cria</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15 FERRAMENTAS -->
+      <section class="slide">
+        <div class="eyebrow">Ferramentas</div>
+        <h2 style="margin-bottom:1cqw">Você não precisa do terminal.</h2>
+        <p class="sub">Várias formas de usar o mesmo Git. Escolha a que te deixa confortável:</p>
+        <div class="domains">
+          <span class="pill">VS Code · Source Control</span>
+          <span class="pill">GitHub Desktop</span>
+          <span class="pill">GitKraken</span>
+          <span class="pill">Sourcetree</span>
+          <span class="pill">Terminal</span>
+        </div>
+        <div class="note"><b>Lembrete:</b> Git é a base, GitHub é um host. Hosts alternativos: GitLab, Bitbucket. O
+          importante é começar. A ferramenta visual é só detalhe.</div>
+      </section>
+
+      <!-- 16 BOAS PRÁTICAS -->
+      <section class="slide">
+        <div class="eyebrow">Boas práticas</div>
+        <h2 style="margin-bottom:3cqw">Hábitos que salvam.</h2>
+        <div class="grid" style="grid-template-columns:repeat(2,1fr)">
+          <div class="card">
+            <h3>Commit pequeno e frequente</h3>
+            <p>fácil de entender e de reverter.</p>
+          </div>
+          <div class="card">
+            <h3>Mensagem clara</h3>
+            <p>"corrige bug do botão", não "asdf".</p>
+          </div>
+          <div class="card">
+            <h3>Push todo dia</h3>
+            <p>backup automático sem esforço.</p>
+          </div>
+          <div class="card">
+            <h3>Uma branch por tarefa</h3>
+            <p>uma ideia, uma linha do tempo.</p>
+          </div>
+          <div class="card">
+            <h3>Nunca suba senhas</h3>
+            <p>use .gitignore e variáveis de ambiente.</p>
+          </div>
+          <div class="card">
+            <h3>Leia o diff</h3>
+            <p>veja o que muda antes de salvar.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 17 RESUMO -->
+      <section class="slide">
+        <div class="eyebrow">Resumo</div>
+        <h2 style="margin-bottom:3cqw">Recapitulando.</h2>
+        <div class="layers">
+          <div class="layer"><span class="t">Git</span><span class="d">máquina do tempo no seu computador.</span></div>
+          <div class="layer"><span class="t">GitHub</span><span class="d">o repositório na nuvem + colaboração.</span>
+          </div>
+          <div class="layer"><span class="t">Commit · Branch · Push</span><span class="d">salvar, ramificar,
+              enviar.</span></div>
+          <div class="layer top"><span class="t accent">Para você</span><span class="d">rede de segurança pra criar com
+              IA sem medo.</span></div>
+        </div>
+      </section>
+
+      <!-- 18 CHAMADA FINAL -->
+      <section class="slide center">
+        <h2 style="margin-bottom:2.5cqw;max-width:88%">Não precisa decorar tudo hoje.</h2>
+        <h2 style="max-width:88%">Precisa só <span class="accent">começar a versionar o próximo projeto</span>.</h2>
+      </section>
+
+      <!-- 19 OBRIGADO -->
+      <section class="slide center">
+        <h1 style="margin-bottom:1cqw">Obrigado.</h1>
+        <p class="sub" style="font-size:3.4cqw;margin-bottom:8cqw">Perguntas?</p>
+        <div class="footer-name">Leandro Silva</div>
+        <div class="footer-role">Tech Talk · Orla</div>
+      </section>
+
+    </div>
+  </div>
+
+  <div id="ctr">
+    <span id="counter">1 / 20</span>
+    <button id="prev">‹</button>
+    <button id="next">›</button>
+    <button id="fs">⛶</button>
+  </div>
+  <div class="hint">← → · Espaço · F (tela cheia)</div>
+
+  <script>
+    const slides = [...document.querySelectorAll('.slide')];
+    let i = 0;
+    const bar = document.getElementById('bar');
+    const counter = document.getElementById('counter');
+    function show(n) {
+      i = Math.max(0, Math.min(slides.length - 1, n));
+      slides.forEach((s, k) => s.classList.toggle('active', k === i));
+      bar.style.width = ((i + 1) / slides.length * 100) + '%';
+      counter.textContent = (i + 1) + ' / ' + slides.length;
+      // pause all videos except current
+      document.querySelectorAll('video').forEach(v => { v.pause(); });
+    }
+    function next() { show(i + 1) } function prev() { show(i - 1) }
+    document.getElementById('next').onclick = next;
+    document.getElementById('prev').onclick = prev;
+    document.getElementById('fs').onclick = () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    };
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+      else if (e.key === 'Home') show(0);
+      else if (e.key === 'End') show(slides.length - 1);
+      else if (e.key.toLowerCase() === 'f') document.getElementById('fs').click();
+    });
+    // click halves to navigate (ignore clicks on video/controls)
+    document.getElementById('deck').addEventListener('click', e => {
+      if (e.target.closest('video') || e.target.closest('button')) return;
+      const r = e.currentTarget.getBoundingClientRect();
+      (e.clientX - r.left > r.width / 2) ? next() : prev();
+    });
+    show(0);
+  </script>
+</body>
+
+</html>
